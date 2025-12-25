@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const paketWisataRoutes = require('./routes/paketWisata.routes');
+const beritaEventRoutes = require('./routes/beritaEvent.routes');
 const errorHandler = require('./middlewares/errorHandler.middleware');
 
 const app = express();
@@ -12,6 +13,8 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/api/paket-wisata', paketWisataRoutes);
+app.use('/api/berita-event', beritaEventRoutes);
+
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     success: true,
