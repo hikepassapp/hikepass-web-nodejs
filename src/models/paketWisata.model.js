@@ -17,8 +17,6 @@ class PaketWisata {
 
     if (filters.sort === 'terbaru') {
       query += ' ORDER BY created_at DESC';
-    } else if (filters.sort === 'rating') {
-      query += ' ORDER BY rating DESC';
     } else if (filters.sort === 'biaya') {
       query += ' ORDER BY biaya ASC';
     } else {
@@ -40,15 +38,13 @@ class PaketWisata {
   static async create(data) {
     const query = `
       INSERT INTO paket_wisata 
-      (judul, penulis, jenis, rating, tanggal, biaya, titik_kumpul, waktu, kontak, deskripsi, image, guide)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (judul, jenis, tanggal, biaya, titik_kumpul, waktu, kontak, deskripsi, image, guide)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     
     const [result] = await db.execute(query, [
       data.judul,
-      data.penulis,
       data.jenis,
-      data.rating,
       data.tanggal,
       data.biaya,
       data.titikKumpul,

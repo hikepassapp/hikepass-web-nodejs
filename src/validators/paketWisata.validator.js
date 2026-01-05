@@ -5,17 +5,9 @@ exports.validatePaketWisata = [
     .notEmpty().withMessage('Judul tidak boleh kosong')
     .isLength({ min: 5 }).withMessage('Judul minimal 5 karakter'),
   
-  body('penulis')
-    .trim()
-    .notEmpty().withMessage('Penulis tidak boleh kosong'),
-  
   body('jenis')
     .isIn(['private', 'open trip']).withMessage('Jenis harus private atau open trip'),
-  
-  body('rating')
-    .optional()
-    .isFloat({ min: 0, max: 5 }).withMessage('Rating harus antara 0-5'),
-  
+
   body('tanggal')
     .notEmpty().withMessage('Tanggal tidak boleh kosong')
     .isISO8601().withMessage('Format tanggal tidak valid'),
@@ -52,20 +44,11 @@ exports.validatePaketWisataUpdate = [
     .trim()
     .notEmpty().withMessage('Judul tidak boleh kosong')
     .isLength({ min: 5 }).withMessage('Judul minimal 5 karakter'),
-  
-  body('penulis')
-    .optional()
-    .trim()
-    .notEmpty().withMessage('Penulis tidak boleh kosong'),
-  
+
   body('jenis')
     .optional()
     .isIn(['private', 'open trip']).withMessage('Jenis harus private atau open trip'),
-  
-  body('rating')
-    .optional()
-    .isFloat({ min: 0, max: 5 }).withMessage('Rating harus antara 0-5'),
-  
+
   body('tanggal')
     .optional()
     .isISO8601().withMessage('Format tanggal tidak valid'),
