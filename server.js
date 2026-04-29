@@ -1,17 +1,8 @@
 require('dotenv').config();
 const app = require('./src/app');
-const db = require('./src/config/database');
+require('./src/config/database'); // cukup panggil, jangan pakai getConnection
 
-const PORT = process.env.PORT || 5000;
-
-db.getConnection((err, connection) => {
-  if (err) {
-    console.error('Error koneksi database:', err.message);
-    process.exit(1);
-  }
-  console.log('Database MySQL terhubung');
-  connection.release();
-});
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log(`Server berjalan di port ${PORT}`);
