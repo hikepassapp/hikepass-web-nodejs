@@ -1,15 +1,38 @@
-const PaketWisata = require('../models/paketWisata.model');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+
 const fs = require('fs');
 const path = require('path');
 
+// GET ALL
 exports.getAllPaketWisata = async (req, res) => {
   try {
     const { jenis, search, sort } = req.query;
-    
-    const paketWisata = await PaketWisata.findAll({
-      jenis,
-      search,
-      sort
+
+    const where = {};
+
+    if (jenis) {
+      where.jenis = jenis;
+    }
+
+    if (search) {
+      where.OR = [
+        { judul: { contains: search } },
+        { deskripsi: { contains: search } }
+      ];
+    }
+
+    let orderBy = { tanggal: 'asc' };
+
+    if (sort === 'terbaru') {
+      orderBy = { created_at: 'desc' };
+    } else if (sort === 'biaya') {
+      orderBy = { biaya: 'asc' };
+    }
+
+    const paketWisata = await prisma.paketWisata.findMany({
+      where,
+      orderBy
     });
 
     res.status(200).json({
@@ -25,9 +48,13 @@ exports.getAllPaketWisata = async (req, res) => {
     });
   }
 };
+
+// GET BY ID
 exports.getPaketWisataById = async (req, res) => {
   try {
-    const paketWisata = await PaketWisata.findById(req.params.id);
+    const paketWisata = await prisma.paketWisata.findUnique({
+      where: { id: Number(req.params.id) }
+    });
 
     if (!paketWisata) {
       return res.status(404).json({
@@ -49,15 +76,28 @@ exports.getPaketWisataById = async (req, res) => {
   }
 };
 
+// CREATE
 exports.createPaketWisata = async (req, res) => {
   try {
-    const dataPaket = {
+    const data = {
       ...req.body,
       image: req.file ? req.file.filename : 'default.jpg'
     };
 
-    const insertId = await PaketWisata.create(dataPaket);
-    const newPaket = await PaketWisata.findById(insertId);
+    const newPaket = await prisma.paketWisata.create({
+      data: {
+        judul: data.judul,
+        jenis: data.jenis,
+        tanggal: data.tanggal,
+        biaya: Number(data.biaya),
+        titik_kumpul: data.titikKumpul,
+        waktu: data.waktu,
+        kontak: data.kontak,
+        deskripsi: data.deskripsi,
+        image: data.image,
+        guide: data.guide
+      }
+    });
 
     res.status(201).json({
       success: true,
@@ -65,7 +105,7 @@ exports.createPaketWisata = async (req, res) => {
       data: newPaket
     });
   } catch (error) {
-    if (req.file) {
+    if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
 
@@ -77,9 +117,14 @@ exports.createPaketWisata = async (req, res) => {
   }
 };
 
+// UPDATE
 exports.updatePaketWisata = async (req, res) => {
   try {
-    const paketWisata = await PaketWisata.findById(req.params.id);
+    const id = Number(req.params.id);
+
+    const paketWisata = await prisma.paketWisata.findUnique({
+      where: { id }
+    });
 
     if (!paketWisata) {
       return res.status(404).json({
@@ -88,23 +133,33 @@ exports.updatePaketWisata = async (req, res) => {
       });
     }
 
+    // HANDLE IMAGE
+    let image = paketWisata.image;
+
     if (req.file) {
-      if (paketWisata.image !== 'default.jpg') {
-        const oldImagePath = path.join(__dirname, '../../uploads/images', paketWisata.image);
-        if (fs.existsSync(oldImagePath)) {
-          fs.unlinkSync(oldImagePath);
+      if (image && image !== 'default.jpg') {
+        const oldPath = path.join(__dirname, '../../uploads/images', image);
+        if (fs.existsSync(oldPath)) {
+          fs.unlinkSync(oldPath);
         }
       }
-      req.body.image = req.file.filename;
+
+      image = req.file.filename;
     }
 
-    await PaketWisata.update(req.params.id, req.body);
-    const updatedPaket = await PaketWisata.findById(req.params.id);
+    const updated = await prisma.paketWisata.update({
+      where: { id },
+      data: {
+        ...req.body,
+        biaya: req.body.biaya ? Number(req.body.biaya) : undefined,
+        image
+      }
+    });
 
     res.status(200).json({
       success: true,
       message: 'Paket wisata berhasil diupdate',
-      data: updatedPaket
+      data: updated
     });
   } catch (error) {
     res.status(400).json({
@@ -115,9 +170,14 @@ exports.updatePaketWisata = async (req, res) => {
   }
 };
 
+// DELETE
 exports.deletePaketWisata = async (req, res) => {
   try {
-    const paketWisata = await PaketWisata.findById(req.params.id);
+    const id = Number(req.params.id);
+
+    const paketWisata = await prisma.paketWisata.findUnique({
+      where: { id }
+    });
 
     if (!paketWisata) {
       return res.status(404).json({
@@ -126,14 +186,18 @@ exports.deletePaketWisata = async (req, res) => {
       });
     }
 
-    if (paketWisata.image !== 'default.jpg') {
+    // DELETE IMAGE
+    if (paketWisata.image && paketWisata.image !== 'default.jpg') {
       const imagePath = path.join(__dirname, '../../uploads/images', paketWisata.image);
+
       if (fs.existsSync(imagePath)) {
         fs.unlinkSync(imagePath);
       }
     }
 
-    await PaketWisata.delete(req.params.id);
+    await prisma.paketWisata.delete({
+      where: { id }
+    });
 
     res.status(200).json({
       success: true,

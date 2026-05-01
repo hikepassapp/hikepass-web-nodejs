@@ -1,16 +1,44 @@
-const BeritaEvent = require('../models/beritaEvent.model');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+
 const fs = require('fs');
 const path = require('path');
 
+// GET ALL
 exports.getAllBeritaEvent = async (req, res) => {
   try {
     const { jenis, search, penulis, sort } = req.query;
-    
-    const beritaEvent = await BeritaEvent.findAll({
-      jenis,
-      search,
-      penulis,
-      sort
+
+    const where = {};
+
+    if (jenis) {
+      where.jenis = jenis;
+    }
+
+    if (search) {
+      where.OR = [
+        { judul: { contains: search } },
+        { deskripsi: { contains: search } }
+      ];
+    }
+
+    if (penulis) {
+      where.penulis = {
+        contains: penulis
+      };
+    }
+
+    let orderBy = { tanggal_publish: 'desc' };
+
+    if (sort === 'terlama') {
+      orderBy = { tanggal_publish: 'asc' };
+    } else if (sort === 'judul') {
+      orderBy = { judul: 'asc' };
+    }
+
+    const beritaEvent = await prisma.beritaEvent.findMany({
+      where,
+      orderBy
     });
 
     res.status(200).json({
@@ -26,9 +54,15 @@ exports.getAllBeritaEvent = async (req, res) => {
     });
   }
 };
+
+// GET BY ID
 exports.getBeritaEventById = async (req, res) => {
   try {
-    const beritaEvent = await BeritaEvent.findById(req.params.id);
+    const id = Number(req.params.id);
+
+    const beritaEvent = await prisma.beritaEvent.findUnique({
+      where: { id }
+    });
 
     if (!beritaEvent) {
       return res.status(404).json({
@@ -49,15 +83,25 @@ exports.getBeritaEventById = async (req, res) => {
     });
   }
 };
+
+// CREATE
 exports.createBeritaEvent = async (req, res) => {
   try {
-    const dataBerita = {
+    const data = {
       ...req.body,
       image: req.file ? req.file.filename : 'default.jpg'
     };
 
-    const insertId = await BeritaEvent.create(dataBerita);
-    const newBerita = await BeritaEvent.findById(insertId);
+    const newBerita = await prisma.beritaEvent.create({
+      data: {
+        judul: data.judul,
+        jenis: data.jenis,
+        tanggal_publish: data.tanggalPublish,
+        penulis: data.penulis,
+        deskripsi: data.deskripsi,
+        image: data.image
+      }
+    });
 
     res.status(201).json({
       success: true,
@@ -65,8 +109,8 @@ exports.createBeritaEvent = async (req, res) => {
       data: newBerita
     });
   } catch (error) {
-    // Hapus file yang diupload jika terjadi error
-    if (req.file) {
+    // rollback file
+    if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
 
@@ -77,9 +121,15 @@ exports.createBeritaEvent = async (req, res) => {
     });
   }
 };
+
+// UPDATE
 exports.updateBeritaEvent = async (req, res) => {
   try {
-    const beritaEvent = await BeritaEvent.findById(req.params.id);
+    const id = Number(req.params.id);
+
+    const beritaEvent = await prisma.beritaEvent.findUnique({
+      where: { id }
+    });
 
     if (!beritaEvent) {
       return res.status(404).json({
@@ -87,24 +137,37 @@ exports.updateBeritaEvent = async (req, res) => {
         message: 'Berita/Event tidak ditemukan'
       });
     }
-    
+
+    let image = beritaEvent.image;
+
     if (req.file) {
-      if (beritaEvent.image !== 'default.jpg') {
-        const oldImagePath = path.join(__dirname, '../../uploads/images', beritaEvent.image);
-        if (fs.existsSync(oldImagePath)) {
-          fs.unlinkSync(oldImagePath);
+      if (image && image !== 'default.jpg') {
+        const oldPath = path.join(__dirname, '../../uploads/images', image);
+
+        if (fs.existsSync(oldPath)) {
+          fs.unlinkSync(oldPath);
         }
       }
-      req.body.image = req.file.filename;
+
+      image = req.file.filename;
     }
 
-    await BeritaEvent.update(req.params.id, req.body);
-    const updatedBerita = await BeritaEvent.findById(req.params.id);
+    const updated = await prisma.beritaEvent.update({
+      where: { id },
+      data: {
+        judul: req.body.judul,
+        jenis: req.body.jenis,
+        tanggal_publish: req.body.tanggalPublish,
+        penulis: req.body.penulis,
+        deskripsi: req.body.deskripsi,
+        image
+      }
+    });
 
     res.status(200).json({
       success: true,
       message: 'Berita/Event berhasil diupdate',
-      data: updatedBerita
+      data: updated
     });
   } catch (error) {
     res.status(400).json({
@@ -115,9 +178,14 @@ exports.updateBeritaEvent = async (req, res) => {
   }
 };
 
+// DELETE
 exports.deleteBeritaEvent = async (req, res) => {
   try {
-    const beritaEvent = await BeritaEvent.findById(req.params.id);
+    const id = Number(req.params.id);
+
+    const beritaEvent = await prisma.beritaEvent.findUnique({
+      where: { id }
+    });
 
     if (!beritaEvent) {
       return res.status(404).json({
@@ -126,14 +194,18 @@ exports.deleteBeritaEvent = async (req, res) => {
       });
     }
 
-    if (beritaEvent.image !== 'default.jpg') {
+    // delete image
+    if (beritaEvent.image && beritaEvent.image !== 'default.jpg') {
       const imagePath = path.join(__dirname, '../../uploads/images', beritaEvent.image);
+
       if (fs.existsSync(imagePath)) {
         fs.unlinkSync(imagePath);
       }
     }
 
-    await BeritaEvent.delete(req.params.id);
+    await prisma.beritaEvent.delete({
+      where: { id }
+    });
 
     res.status(200).json({
       success: true,

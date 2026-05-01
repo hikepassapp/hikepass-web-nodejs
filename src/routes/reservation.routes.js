@@ -2,20 +2,28 @@ const express = require('express');
 const router = express.Router();
 
 const controller = require('../controllers/reservation.controller');
-const uploadIdCard = require('../middlewares/uploadIdCard.middleware');
+const validate = require('../middlewares/validate.middleware');
+const {
+    createReservationSchema,
+    updateReservationSchema
+} = require('../validators/reservation.validator');
 
-// CREATE (wajib upload)
+const upload = require('../middlewares/uploadIdCard'); // multer kamu
+
+// CREATE
 router.post(
     '/',
-    uploadIdCard.single('id_card'),
-    controller.store
+    upload.single('id_card'),
+    validate(createReservationSchema),
+    controller.createReservation
 );
 
-// UPDATE (optional upload)
+// UPDATE
 router.put(
     '/:id',
-    uploadIdCard.single('id_card'),
-    controller.update
+    upload.single('id_card'),
+    validate(updateReservationSchema),
+    controller.updateReservation
 );
 
 module.exports = router;

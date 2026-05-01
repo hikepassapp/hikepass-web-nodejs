@@ -25,6 +25,7 @@ services:
     container_name: express_app
     ports:
       - "3000:3000"
+      - "5555:5555"
     depends_on:
       - db
     environment:
@@ -33,6 +34,7 @@ services:
       DB_USER: user
       DB_PASSWORD: password
       DB_NAME: hikepass
+      HOST: 0.0.0.0
     volumes:
       - .:/app
       - /app/node_modules

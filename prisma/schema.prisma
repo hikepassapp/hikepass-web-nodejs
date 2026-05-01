@@ -203,3 +203,28 @@ model PasswordOtp {
 
   user User? @relation(fields: [email], references: [email])
 }
+
+model paketWisata {
+  id           Int      @id @default(autoincrement())
+  judul        String
+  jenis        String
+  tanggal      DateTime
+  biaya        Int
+  titik_kumpul String
+  waktu        String
+  kontak       String
+  deskripsi    String
+  image        String?
+  guide        String?
+  created_at   DateTime @default(now())
+}
+
+model beritaEvent {
+  id              Int      @id @default(autoincrement())
+  judul           String
+  jenis           String
+  tanggal_publish DateTime
+  penulis         String
+  deskripsi       String
+  image           String?
+}
