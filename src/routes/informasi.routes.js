@@ -1,11 +1,19 @@
 const express = require('express');
 const router = express.Router();
-const InformasiController = require('../controllers/InformasiController');
+const controller = require('../controllers/informasi.controller');
+const upload = require('../middlewares/uploadInformasi.middleware');
 
-router.get('/', InformasiController.index);
-router.get('/:id', InformasiController.show);
-router.post('/', InformasiController.store);
-router.put('/:id', InformasiController.update);
-router.delete('/:id', InformasiController.destroy);
+// GET
+router.get('/', controller.index);
+router.get('/:id', controller.show);
+
+// POST
+router.post('/', upload.single('gambar'), controller.store);
+
+// PUT
+router.put('/:id', upload.single('gambar'), controller.update);
+
+// DELETE
+router.delete('/:id', controller.destroy);
 
 module.exports = router;

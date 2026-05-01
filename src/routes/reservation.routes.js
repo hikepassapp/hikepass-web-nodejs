@@ -1,13 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const ReservationController = require('../controllers/ReservationController');
 
-router.get('/all', ReservationController.all);
+const controller = require('../controllers/reservation.controller');
+const uploadIdCard = require('../middlewares/uploadIdCard.middleware');
 
-router.get('/', ReservationController.index);
-router.get('/:id', ReservationController.show);
-router.post('/', ReservationController.store);
-router.put('/:id', ReservationController.update);
-router.delete('/:id', ReservationController.destroy);
+// CREATE (wajib upload)
+router.post(
+    '/',
+    uploadIdCard.single('id_card'),
+    controller.store
+);
+
+// UPDATE (optional upload)
+router.put(
+    '/:id',
+    uploadIdCard.single('id_card'),
+    controller.update
+);
 
 module.exports = router;
