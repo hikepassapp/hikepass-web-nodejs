@@ -1,0 +1,205 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model User {
+  id                Int       @id @default(autoincrement())
+  name              String
+  email             String    @unique
+  email_verified_at DateTime?
+  password          String
+  role              String    @default("customer")
+  posisi            String?
+  remember_token    String?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  // relations
+  password_otps PasswordOtp[]
+  sessions      Session[]
+}
+
+model PasswordResetToken {
+  email      String    @id
+  token      String
+  created_at DateTime?
+}
+
+model Session {
+  id            String  @id
+  user_id       Int?
+  ip_address    String? @db.VarChar(45)
+  user_agent    String? @db.Text
+  payload       String  @db.LongText
+  last_activity Int
+
+  user User? @relation(fields: [user_id], references: [id])
+}
+
+model Cache {
+  key        String @id
+  value      String @db.MediumText
+  expiration Int
+}
+
+model CacheLock {
+  key        String @id
+  owner      String
+  expiration Int
+}
+
+model Job {
+  id           Int    @id @default(autoincrement())
+  queue        String
+  payload      String @db.LongText
+  attempts     Int
+  reserved_at  Int?
+  available_at Int
+  created_at   Int
+}
+
+model JobBatch {
+  id             String  @id
+  name           String
+  total_jobs     Int
+  pending_jobs   Int
+  failed_jobs    Int
+  failed_job_ids String  @db.LongText
+  options        String? @db.MediumText
+  cancelled_at   Int?
+  created_at     Int
+  finished_at    Int?
+}
+
+model FailedJob {
+  id         Int      @id @default(autoincrement())
+  uuid       String   @unique
+  connection String   @db.Text
+  queue      String   @db.Text
+  payload    String   @db.LongText
+  exception  String   @db.LongText
+  failed_at  DateTime @default(now())
+}
+
+model PersonalAccessToken {
+  id             Int       @id @default(autoincrement())
+  tokenable_type String
+  tokenable_id   Int
+  name           String    @db.Text
+  token          String    @unique @db.VarChar(64)
+  abilities      String?   @db.Text
+  last_used_at   DateTime?
+  expires_at     DateTime?
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @updatedAt
+}
+
+model Mountain {
+  id         Int      @id @default(autoincrement())
+  name       String
+  manager    String?
+  status     String?
+  quota      Int?
+  location   String?
+  contact    String?
+  price      Int?
+  duration   String?
+  pos        String?
+  image      String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  reservations Reservation[]
+}
+
+model Reservation {
+  id           Int      @id @default(autoincrement())
+  id_mountain  Int
+  start_date   DateTime
+  name         String
+  nik          String
+  gender       String
+  phone_number String
+  address      String   @db.Text
+  citizen      String
+  id_card      String
+  price        Int
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  mountain Mountain  @relation(fields: [id_mountain], references: [id], onDelete: Cascade)
+  checkins Checkin[]
+}
+
+model Checkin {
+  id             Int      @id @default(autoincrement())
+  id_reservation Int
+  item_list      String   @db.Text
+  checkin_date   DateTime
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  reservation Reservation @relation(fields: [id_reservation], references: [id], onDelete: Cascade)
+  checkouts   Checkout[]
+}
+
+model Checkout {
+  id            Int      @id @default(autoincrement())
+  id_checkin    Int
+  item_list     String   @db.Text
+  checkout_date DateTime
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  checkin   Checkin   @relation(fields: [id_checkin], references: [id], onDelete: Cascade)
+  histories History[]
+}
+
+model History {
+  id          Int      @id @default(autoincrement())
+  id_checkout Int
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  checkout Checkout @relation(fields: [id_checkout], references: [id], onDelete: Cascade)
+}
+
+model Laporan {
+  id                 Int      @id @default(autoincrement())
+  nama_pelapor       String
+  tanggal_kejadian   DateTime
+  lokasi_kejadian    String
+  deskripsi_kejadian String   @db.Text
+  foto_bukti         String?
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+}
+
+model Informasi {
+  id         Int      @id @default(autoincrement())
+  judul      String
+  deskripsi  String   @db.Text
+  gambar     String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model PasswordOtp {
+  id         Int      @id @default(autoincrement())
+  email      String
+  otp_hash   String
+  expired_at DateTime
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user User? @relation(fields: [email], references: [email])
+}
