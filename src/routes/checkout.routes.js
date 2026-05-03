@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const CheckoutController = require('../controllers/CheckoutController');
+const CheckoutController = require('../controllers/checkout.controller');
 
 router.get('/checkin/:id', CheckoutController.getByCheckin);
 router.get('/reservation/:id', CheckoutController.getByReservation);

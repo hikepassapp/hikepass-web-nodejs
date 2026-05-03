@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const HistoryController = require('../controllers/HistoryController');
+const HistoryController = require('../controllers/history.controller');
 
 router.get('/checkout/:id', HistoryController.getByCheckout);
 router.get('/reservation/:id', HistoryController.getByReservation);
