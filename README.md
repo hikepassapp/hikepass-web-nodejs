@@ -73,6 +73,14 @@ npx prisma db pull
 
 ---
 
+Cara buka prisma studio:
+
+```bash
+npx prisma studio --port 5555 --browser none
+```
+
+---
+
 ## 🔐 Konfigurasi ENV
 
 Buat file `.env` di root project:

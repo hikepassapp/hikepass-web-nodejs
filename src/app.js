@@ -17,6 +17,11 @@ const historyRoutes = require('./routes/history.routes');
 const laporanRoutes = require('./routes/laporan.routes');
 const informasiRoutes = require('./routes/informasi.routes');
 
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/mountains', mountainRoutes);
@@ -26,10 +31,6 @@ app.use('/api/checkouts', checkoutRoutes);
 app.use('/api/histories', historyRoutes);
 app.use('/api/laporans', laporanRoutes);
 app.use('/api/informasi', informasiRoutes);
-
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/api/paket-wisata', paketWisataRoutes);

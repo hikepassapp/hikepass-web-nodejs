@@ -17,9 +17,9 @@ const upload = require('../middlewares/uploadIdCard.middleware');
 // ===============================
 router.post(
     '/',
-    upload.single('id_card'),                 // upload file
-    validate(createReservationSchema),        // validasi body
-    controller.store                          // ⚠️ sesuai controller
+    upload.single('id_card'),
+    validate(createReservationSchema),
+    controller.store
 );
 
 
